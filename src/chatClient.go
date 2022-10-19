@@ -8,7 +8,7 @@ import ( // Librairies nécéssaires
 )
 
 func main() {
-	connection, err := net.Dial("tcp", "192.168.207.130:8080")
+	connection, err := net.Dial("tcp", "127.0.0.1:8080")
 	//Ferme la connexion et nettoie le tchat à la sortie de l'utilisateur
 	if err != nil {
 		fmt.Println("Can not connect to the server")

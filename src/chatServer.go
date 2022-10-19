@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"strconv"
 	"os"
+	"strconv"
 )
 
 // Constante du port utlilisé
@@ -24,55 +24,82 @@ type server struct {
 	currentSession session
 }
 
-// Variable de nouvelle session transformée en tableau
-var newSession []session
+// Variable de nouvelle session
+var newSession session
 
-// Récupération du nombre de session crées
-int nbConn = len(newSession)
+// Variable du nombre de session crées
+var nbConn int = 0
+
+// Variable du nombre de connexion maximum
+var maxConn int = 0
 
 func main() {
 	server, _ := net.Listen("tcp", ":"+strconv.Itoa(PORT))
 	if server == nil {
 		panic("couldn't start listening....")
 	}
-	
+
 	// Demande du nombre de connexion maximales
-	maxConn := bufio.NewReader(os.Stdin)
-	
-	// Condition de création de nouvelle session
-	if nbConn < maxConn {
-	
-		newSession = session{
-			connections: []net.Conn{},
-			names:       []string{},
-		}
-		conns := clientConns(server)
-		for {
-			go handleConnection(<-conns)
-		}
-	} else {
-		
-		fmt.Println("Nombre de session maximale atteint")
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Println("Veuillez entrer un nombre de connexion maximale au serveur :")
+	scanner.Scan()
+
+	rep1, err := strconv.Atoi(scanner.Text())
+
+	if err != nil {
+		fmt.Println("Il faut entrer un nombre !")
+		main()
 	}
-	
+
+	// Nombre de connexion max set
+	maxConn = rep1
+
+	newSession = session{
+		connections: []net.Conn{},
+		names:       []string{},
+	}
+	conns := clientConns(server)
+	for {
+
+		// ****** A checker
+		nbConn++
+		fmt.Println(nbConn)
+		fmt.Println(maxConn)
+		// ******
+		go handleConnection(<-conns)
+	}
 
 }
 
 /*
- * Ecoute et accepte les connexion clients
+ * Ecoute et accepte les connexions clients
  */
 func clientConns(listener net.Listener) chan net.Conn {
 	channel := make(chan net.Conn)
-	go func() {
-		for {
-			client, _ := listener.Accept()
-			if client == nil {
-				fmt.Printf("couldn't accept client connection")
-				continue
+
+	// ***** A checker
+	if nbConn < maxConn {
+
+		// ----- code déja présent avant
+		go func() {
+			for {
+				client, _ := listener.Accept()
+				if client == nil {
+					fmt.Printf("couldn't accept client connection")
+					continue
+				}
+				channel <- client
 			}
-			channel <- client
-		}
-	}()
+		}()
+		// ------
+
+	} else {
+
+		fmt.Println("Nombre de session maximale atteint")
+	}
+	// *****
+
 	return channel
 }
 
@@ -86,6 +113,7 @@ func handleConnection(client net.Conn) {
 	buff := make([]byte, 512)
 	clientNameb, _ := client.Read(buff)
 	clientName := string(buff[0:clientNameb])
+
 	newSession.names = append(newSession.names, clientName)
 	newSession.connections = append(newSession.connections, client)
 
