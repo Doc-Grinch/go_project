@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -45,6 +46,20 @@ func get_exe(pid int) (string, error) {
 	return os.Readlink(filename)
 }
 
+// Function to get the mem value of a pid
+func get_mem(pid int) (string, error) {
+	data, err := os.ReadFile("/proc/" + strconv.FormatInt(int64(pid), 10) + "/stat")
+	result := strings.Fields(string(data))
+	mem_bytes, err_conv := strconv.Atoi(result[22])
+	if err_conv != nil {
+		fmt.Println("Error during conversion - Exiting :", err_conv)
+		os.Exit(1)
+	}
+	mem_mb := mem_bytes / (1024 * 1024)
+	mem_res := strconv.Itoa(mem_mb)
+	return mem_res, err
+}
+
 // Function to display cwd and exe link of a /proc/dir
 func pid() []string {
 	// Create the slice of PID
@@ -61,7 +76,8 @@ func pid() []string {
 		pid := pids[i]
 		pid_val, err_cwd := get_cwd(pid)
 		exe_val, err_exe := get_exe(pid)
-
+		mem_val, err_mem := get_mem(pid)
+		result = append(result, "\n")
 		if err_cwd != nil {
 			continue
 		} else {
@@ -72,9 +88,13 @@ func pid() []string {
 			continue
 		} else {
 			str := strconv.Itoa(pid)
-			result = append(result, "/proc/"+str+"/exe:", string(exe_val))
+			result = append(result, "----- /proc/"+str+"/exe:", string(exe_val))
 		}
-		result = append(result, "\n")
+		if err_mem != nil {
+			continue
+		} else {
+			result = append(result, "----- mem :"+string(mem_val)+" ko")
+		}
 
 	}
 	return result
