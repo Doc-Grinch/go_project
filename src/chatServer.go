@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"os"
 )
 
 // Constante du port utlilisé
@@ -23,22 +24,38 @@ type server struct {
 	currentSession session
 }
 
-// Varible de nouvelle session
-var newSession session
+// Variable de nouvelle session transformée en tableau
+var newSession []session
+
+// Récupération du nombre de session crées
+int nbConn = len(newSession)
 
 func main() {
 	server, _ := net.Listen("tcp", ":"+strconv.Itoa(PORT))
 	if server == nil {
 		panic("couldn't start listening....")
 	}
-	newSession = session{
-		connections: []net.Conn{},
-		names:       []string{},
+	
+	// Demande du nombre de connexion maximales
+	maxConn := bufio.NewReader(os.Stdin)
+	
+	// Condition de création de nouvelle session
+	if nbConn < maxConn {
+	
+		newSession = session{
+			connections: []net.Conn{},
+			names:       []string{},
+		}
+		conns := clientConns(server)
+		for {
+			go handleConnection(<-conns)
+		}
+	} else {
+		
+		fmt.Println("Nombre de session maximale atteint")
 	}
-	conns := clientConns(server)
-	for {
-		go handleConnection(<-conns)
-	}
+	
+
 }
 
 /*
