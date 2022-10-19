@@ -55,14 +55,17 @@ func main() {
 	// Nombre de connexion max set
 	maxConn = rep1
 
+	// Définition des valeurs de newSession
 	newSession = session{
 		connections: []net.Conn{},
 		names:       []string{},
 	}
 
+	// Fonction de connexion client
 	conns := clientConns(server)
 
 	for {
+		//Fonction d'envoi/reception de message
 		go handleConnection(<-conns)
 	}
 
@@ -82,17 +85,18 @@ func clientConns(listener net.Listener) chan net.Conn {
 				continue
 			}
 
+			//Condition de limite de connexion
 			if nbConn >= maxConn {
 				fmt.Printf("Rejecting incoming connection, user limit reached : %d sur %d.\n", nbConn, maxConn)
 				//fmt.Println(newSession.connections)
 				//fmt.Println(newSession.names)
-				err = client.Close()
-				if err != nil {
+				err = client.Close() // Fermeture de la connexion client
+				if err != nil {      // Gestion des erreur de err
 					fmt.Println("Error closing connection after max user limit reached:" + err.Error() + "\n")
 				}
 				//continue
 			} else {
-				channel <- client
+				channel <- client //Envoi du client vers le channel
 			}
 
 			//channel <- client
