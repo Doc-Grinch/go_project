@@ -12,6 +12,7 @@ type Park struct {
 	Id           int64  `json:"id"`
 	Name         string `json:"name"`
 	InPark       string `json:"inPark"`
+	Place        string `json:"Place`
 	Manufacturer string `json:"manufacturer"`
 }
 
@@ -200,6 +201,9 @@ func handle_post(w http.ResponseWriter, r *http.Request) {
 		if search.Manufacturer != "" {
 			parks[index].Manufacturer = search.Manufacturer
 		}
+		if search.Place != "" {
+			parks[index].Place = search.Place
+		}
 		send_park(&parks[index], w)
 	}
 }
@@ -247,9 +251,9 @@ func handle_put(w http.ResponseWriter, r *http.Request) {
 		send_bad_req("Got error when parsing JSON", w)
 		return
 	}
-	if search.Name == "" || search.InPark == "" || search.Manufacturer == "" {
+	if search.Name == "" || search.InPark == "" || search.Manufacturer == "" || search.Place == "" {
 		// If missing some elements
-		send_bad_req("'name', 'inPark' and 'manufacturer' have to be set when PUTing a new element.", w)
+		send_bad_req("'name', 'inPark', 'manufacturer' & 'place'have to be set when PUTing a new element.", w)
 		return
 	}
 	// Generate a new id and append to the list of parks
@@ -281,8 +285,8 @@ func handle_requests(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// Intialize list of parks
-	parks = make([]Park, 0, 5)
-	fmt.Println("Welcome to your Rest API\nTo add a new data, you can try : curl -X PUT 127.0.0.1:8080/endpoint --data '{\"name\":\"Labyrinthe\", \"inPark\":\"Paris\", \"manufacturer\":\"Vortex\"}'")
+	parks = make([]Park, 0, 3)
+	fmt.Println("Welcome to your Rest API\nTo add a new data, you can try : curl -X PUT 127.0.0.1:8080/endpoint --data '{\"name\":\"Labyrinthe\", \"inPark\":\"Asterix\", \"manufacturer\":\"Vortex\", \"place\":\"Paris\"}}'")
 	fmt.Println("To retrieve a data : curl -X GET 127.0.0.1:8080/endpoint --data '{\"id\":1}'; you can get with id or name ")
 	fmt.Println("To modify a data :curl -X POST 127.0.0.1:8080/endpoint --data '{\"id\":1, \"inPark\":\"NewYork\"}'")
 	fmt.Println("To delete a data : curl -X DELETE 127.0.0.1:8080/endpoint --data '{\"id\":1}'")
