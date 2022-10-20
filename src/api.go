@@ -56,7 +56,7 @@ func gen_rand_id() int64 {
 }
 
 // Function that removes element by combining two slices made of all elements to the one we remove and
-// Another slice made of all elements starting from the one we remove to the end of the original slice
+// another slice made of all elements starting from the one we remove to the end of the original slice
 func parks_remove_from_index(index uint) error {
 	if index > uint(len(parks)) {
 		fmt.Println(errors.New("Out of range index"))
