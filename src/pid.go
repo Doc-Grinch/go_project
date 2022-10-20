@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,7 +12,7 @@ func main() {
 	fmt.Println(pid())
 }
 
-// Function to open the /proc dir, read its dirs name and make a slice of it
+// Function to open the /proc dir, read its dirs name and make a slice of it, return an array of pid or null
 func pids() ([]int, error) {
 	f, err := os.Open(`/proc`)
 	if err != nil {
@@ -34,50 +35,69 @@ func pids() ([]int, error) {
 	return pids, nil
 }
 
-// Function to get the link value of cwd
+// Function to get the link value of cwd, return a string or error
 func get_cwd(pid int) (string, error) {
 	filename := "/proc/" + strconv.FormatInt(int64(pid), 10) + "/cwd"
 	return os.Readlink(filename)
 }
 
-// Function to get the link value of exe
+// Function to get the link value of exe, return a string or error
 func get_exe(pid int) (string, error) {
 	filename := "/proc/" + strconv.FormatInt(int64(pid), 10) + "/exe"
 	return os.Readlink(filename)
 }
 
 // Function to get the mem value of a pid
-func get_mem(pid int) (string, error) {
-	data, err := os.ReadFile("/proc/" + strconv.FormatInt(int64(pid), 10) + "/stat")
-	result := strings.Fields(string(data))
-	mem_bytes, err_conv := strconv.Atoi(result[22])
-	if err_conv != nil {
-		fmt.Println("Error during conversion - Exiting :", err_conv)
-		os.Exit(1)
+func get_all_mem(pid int) (string, error) {
+	// We convert the pid to int64 to suit the FormatInt
+	file, err := os.Open("/proc/" + strconv.FormatInt(int64(pid), 10) + "/smaps")
+	// Control that the file was open with no error or exiting
+	if err != nil {
+		fmt.Println("Could not open the memory file - Exiting - : ", err)
+		return "Permission denied", err
 	}
-	mem_mb := mem_bytes / (1024 * 1024)
-	mem_res := strconv.Itoa(mem_mb)
-	return mem_res, err
+	// Used to close the file at the end of main()
+	defer file.Close()
+
+	// Define a scanner to read the file line by line
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	// Scan all the line and retrieve our targets
+	array := [5]string{"Size", "Rss", "Pss", "Swap", "SwapPss"}
+	result := make([]string, 5)
+	i := 0
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), array[i]) && i < len(array) {
+			result = append(result, scanner.Text())
+			i++
+			if i == len(array) {
+				break
+			}
+		}
+	}
+	string_result := strings.Join(result[:], ",")
+	strings.ReplaceAll(string_result, " ", "")
+	return string_result, err
 }
 
 // Function to display cwd and exe link of a /proc/dir
 func pid() []string {
-	// Create the slice of PID
+	// Create the slice of PID or exiting if error
 	pids, err := pids()
 	if err != nil {
 		fmt.Println("Error of pids:", err)
 		os.Exit(1)
 	}
-	// For all the PIDS we get, try to retrieve the cwd and exe
-	// If there is an error of permission, we continue : go to the next PID
-	// If no errors, we retrieve the cwd and exe
+	// For all the PIDS we get, try to retrieve the cwd, exe & memory
+	// If there is an error of permission, we continue or display an error then we go to the next PID
+	// If no errors, we retrieve the cwd, exe & memory values
+	// The return value is an array of string that we display after to the stdout
 	result := make([]string, 1)
 	for i := 0; i < len(pids); i++ {
 		pid := pids[i]
 		pid_val, err_cwd := get_cwd(pid)
 		exe_val, err_exe := get_exe(pid)
-		mem_val, err_mem := get_mem(pid)
-		result = append(result, "\n")
+		all_mem, err_all := get_all_mem(pid)
 		if err_cwd != nil {
 			continue
 		} else {
@@ -88,14 +108,14 @@ func pid() []string {
 			continue
 		} else {
 			str := strconv.Itoa(pid)
-			result = append(result, "----- /proc/"+str+"/exe:", string(exe_val))
+			result = append(result, "/proc/"+str+"/exe:", string(exe_val))
 		}
-		if err_mem != nil {
+		if err_all != nil {
 			continue
 		} else {
-			result = append(result, "----- mem :"+string(mem_val)+" ko")
+			result = append(result, "all memory values :"+string(all_mem)+" ko")
+			result = append(result, "\n")
 		}
-
 	}
 	return result
 }
