@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
@@ -44,26 +45,21 @@ func parks_search_from_id(id int64) (park *Park, index int) {
 	return nil, -1
 }
 
-// Function that finds the largest id and return this id+1
-func parks_get_next_id() int64 {
-	var res int64 = 0
-
-	var tmp int64
-	for _, park := range parks {
-		if park.Id > tmp {
-			tmp = park.Id
-			res = tmp
-		}
+// Function to generate a random number
+func gen_rand_id() int64 {
+	rand_num := int64(rand.Intn(1000000000))
+	data, _ := parks_search_from_id(rand_num)
+	if data.Id != -1 {
+		rand_num = int64(rand.Intn(1000000000))
 	}
-
-	return res + 1
+	return rand_num
 }
 
 // Function that removes element by combining two slices made of all elements to the one we remove and
 // Another slice made of all elements starting from the one we remove to the end of the original slice
 func parks_remove_from_index(index uint) error {
 	if index > uint(len(parks)) {
-		errors.New("Out of range index")
+		fmt.Println(errors.New("Out of range index"))
 	}
 	if index == uint(len(parks))-1 {
 		// Remove last element of the slice
@@ -71,7 +67,6 @@ func parks_remove_from_index(index uint) error {
 	} else {
 		parks = append(parks[:index], parks[index+1:]...)
 	}
-
 	return nil
 }
 
@@ -257,7 +252,7 @@ func handle_put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Generate a new id and append to the list of parks
-	search.Id = parks_get_next_id()
+	search.Id = gen_rand_id()
 	parks = append(parks, *search)
 	send_park(search, w)
 }
