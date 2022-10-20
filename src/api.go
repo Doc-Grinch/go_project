@@ -13,8 +13,8 @@ type Park struct {
 	Id           int64  `json:"id"`
 	Name         string `json:"name"`
 	InPark       string `json:"inPark"`
-	Place        string `json:"Place`
 	Manufacturer string `json:"manufacturer"`
+	Place        string `json:"place"`
 }
 
 var parks []Park
@@ -47,10 +47,10 @@ func parks_search_from_id(id int64) (park *Park, index int) {
 
 // Function to generate a random number
 func gen_rand_id() int64 {
-	rand_num := int64(rand.Intn(1000000000))
-	data, _ := parks_search_from_id(rand_num)
-	if data.Id != -1 {
-		rand_num = int64(rand.Intn(1000000000))
+	rand_num := int64(rand.Intn(100000))
+	_, data := parks_search_from_id(rand_num)
+	if data != -1 {
+		rand_num = int64(rand.Intn(100000))
 	}
 	return rand_num
 }
@@ -132,7 +132,7 @@ func handle_get(w http.ResponseWriter, r *http.Request) {
 		send_bad_req("'id' cannot be negative", w)
 		return
 	}
-	if search.Id == -1 && search.InPark == "" && search.Manufacturer == "" && search.Name == "" {
+	if search.Id == -1 && search.InPark == "" && search.Manufacturer == "" && search.Name == "" && search.Place == "" {
 		// Send all parks if nothing was specified
 		w.WriteHeader(http.StatusFound)
 		value, _ := json.Marshal(parks)
@@ -248,7 +248,7 @@ func handle_put(w http.ResponseWriter, r *http.Request) {
 	}
 	if search.Name == "" || search.InPark == "" || search.Manufacturer == "" || search.Place == "" {
 		// If missing some elements
-		send_bad_req("'name', 'inPark', 'manufacturer' & 'place'have to be set when PUTing a new element.", w)
+		send_bad_req("'name', 'inPark', 'manufacturer' & 'place' have to be set when PUTing a new element.", w)
 		return
 	}
 	// Generate a new id and append to the list of parks
@@ -281,7 +281,7 @@ func handle_requests(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Intialize list of parks
 	parks = make([]Park, 0, 3)
-	fmt.Println("Welcome to your Rest API\nTo add a new data, you can try : curl -X PUT 127.0.0.1:8080/endpoint --data '{\"name\":\"Labyrinthe\", \"inPark\":\"Asterix\", \"manufacturer\":\"Vortex\", \"place\":\"Paris\"}}'")
+	fmt.Println("Welcome to your Rest API\nTo add a new data, you can try : curl -X PUT 127.0.0.1:8080/endpoint --data '{\"name\":\"Labyrinthe\", \"inPark\":\"Asterix\", \"manufacturer\":\"Vortex\", \"place\":\"Paris\"}'")
 	fmt.Println("To retrieve a data : curl -X GET 127.0.0.1:8080/endpoint --data '{\"id\":1}'; you can get with id or name ")
 	fmt.Println("To modify a data :curl -X POST 127.0.0.1:8080/endpoint --data '{\"id\":1, \"inPark\":\"NewYork\"}'")
 	fmt.Println("To delete a data : curl -X DELETE 127.0.0.1:8080/endpoint --data '{\"id\":1}'")
