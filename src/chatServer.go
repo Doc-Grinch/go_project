@@ -36,7 +36,7 @@ var maxConn int = 0
 func main() {
 	server, _ := net.Listen("tcp", ":"+strconv.Itoa(PORT))
 	if server == nil {
-		panic("couldn't start listening....")
+		panic("Ne peut démarrer....")
 	}
 
 	// Demande du nombre de connexion maximales
@@ -81,15 +81,13 @@ func clientConns(listener net.Listener) chan net.Conn {
 		for {
 			client, err := listener.Accept()
 			if client == nil {
-				fmt.Printf("couldn't accept client connection")
+				fmt.Printf("Ne peut accepter la connexion client")
 				continue
 			}
 
 			//Condition de limite de connexion
 			if nbConn >= maxConn {
-				fmt.Printf("Rejecting incoming connection, user limit reached : %d sur %d.\n", nbConn, maxConn)
-				//fmt.Println(newSession.connections)
-				//fmt.Println(newSession.names)
+				fmt.Printf("Rejet de connexion entrante, limite d'utilisateur atteinte : %d sur %d.\n", nbConn, maxConn)
 				err = client.Close() // Fermeture de la connexion client
 				if err != nil {      // Gestion des erreur de err
 					fmt.Println("Error closing connection after max user limit reached:" + err.Error() + "\n")
@@ -126,9 +124,21 @@ func handleConnection(client net.Conn) {
 	fmt.Println(newSession.names)
 
 	for {
+
 		//Recois le message utilisateur
 		line, err := reader.ReadBytes('\n')
+		//Si erreur il y à (déconnexion) et retrait des valeurs de l'utilisateur
 		if err != nil {
+			fmt.Println("Le client " + clientName + " s'est déconnécté")
+			for i := 0; i < len(newSession.names); i++ {
+				if newSession.names[i] == clientName {
+					newSession.names = remove(newSession.names, i)
+					newSession.connections = removeConn(newSession.connections, i)
+					nbConn--
+					fmt.Println(newSession.connections)
+					fmt.Println(newSession.names)
+				}
+			}
 			break
 		}
 		//Diffuse le message
@@ -140,4 +150,14 @@ func handleConnection(client net.Conn) {
 		}
 
 	}
+}
+
+// Fonction remove de valreur string d'une array
+func remove(slice []string, s int) []string {
+	return append(slice[:s], slice[s+1:]...)
+}
+
+// Fonction remove de valreur net.Conn d'une array
+func removeConn(slice []net.Conn, s int) []net.Conn {
+	return append(slice[:s], slice[s+1:]...)
 }
